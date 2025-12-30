@@ -8,7 +8,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/server.ts"
+    "dev": "nodemon src/server.ts",
+    "start": "node --loader ts-node/esm src/server.ts",
+    "migrate": "node --loader ts-node/esm src/migrations/20251218_create_users.ts && node --loader ts-node/esm src/migrations/20251227_add_session_version.ts && node --loader ts-node/esm src/migrations/20251227_add_user_signup_trigger.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.958.0",
@@ -22,7 +24,9 @@
     "nodemon": "^3.1.11",
     "pg": "^8.16.3",
     "resend": "^6.6.0",
-    "zod": "^4.2.1"
+    "zod": "^4.2.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -30,8 +34,6 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.0.3",
-    "@types/pg": "^8.16.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "@types/pg": "^8.16.0"
   }
 }

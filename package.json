@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "nodemon --exec tsx src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "tsx src/server.ts",
     "migrate": "tsx src/migrations/20251218_create_users.ts && tsx src/migrations/20251227_add_session_version.ts && tsx src/migrations/20251227_add_user_signup_trigger.ts"
   },
   "dependencies": {

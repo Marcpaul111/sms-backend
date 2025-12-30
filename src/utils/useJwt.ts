@@ -24,7 +24,7 @@ export const generateAccessToken = (user: IAuthUser): string => {
 // Generate Refresh Token (long-lived)
 export const generateRefreshToken = (user: IAuthUser): string => {
   return jwt.sign(
-    { id: user.id, email: user.email }, 
+    { id: user.id, email: user.email, sv: user.sessionVersion }, 
     JWT_REFRESH_SECRET, 
     {
       expiresIn: JWT_REFRESH_EXPIRY as string,
@@ -43,9 +43,9 @@ export const verifyAccessToken = (token: string): IAuthUser => {
 };
 
 // Verify Refresh Token
-export const verifyRefreshToken = (token: string): { id: string; email: string } => {
+export const verifyRefreshToken = (token: string): { id: string; email: string; sv?: string } => {
   try {
-    return jwt.verify(token, JWT_REFRESH_SECRET) as { id: string; email: string };
+    return jwt.verify(token, JWT_REFRESH_SECRET) as { id: string; email: string; sv?: string };
   } catch (error) {
     throw new Error('Invalid or expired refresh token');
   }

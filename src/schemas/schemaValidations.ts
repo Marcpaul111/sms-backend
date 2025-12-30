@@ -57,3 +57,36 @@ export const resetPasswordSchema = z.object({
 });
 
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
+export const assignTeacherSchema = z.object({
+  teacherUserId: z.string().min(1, 'teacherUserId required'),
+  subjectId: z.string().min(1, 'subjectId required'),
+  classId: z.string().min(1, 'classId required'),
+  sectionId: z.string().min(1, 'sectionId required')
+});
+
+export type AssignTeacherInput = z.infer<typeof assignTeacherSchema>;
+
+export const createAssignmentSchema = z.object({
+  subjectId: z.string().min(1, 'subjectId required'),
+  classId: z.string().min(1, 'classId required'),
+  sectionId: z.string().min(1, 'sectionId required'),
+  title: z.string().min(3, 'Title too short').max(200),
+  description: z.string().max(10000).optional(),
+  dueAt: z.string().min(1, 'dueAt required'),
+  attachments: z.array(z.string()).optional()
+});
+
+export type CreateAssignmentInput = z.infer<typeof createAssignmentSchema>;
+
+export const createSignedUploadSchema = z.object({
+  bucket: z.string().min(1, 'bucket required'),
+  context: z.enum(['assignment', 'submission']),
+  subjectId: z.string().min(1, 'subjectId required'),
+  classId: z.string().min(1, 'classId required'),
+  sectionId: z.string().min(1, 'sectionId required'),
+  assignmentId: z.string().min(1, 'assignmentId required'),
+  filename: z.string().min(1, 'filename required')
+});
+
+export type CreateSignedUploadInput = z.infer<typeof createSignedUploadSchema>;

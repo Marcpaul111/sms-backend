@@ -14,6 +14,7 @@ export interface IAuthUser {
   id: string;
   email: string;
   role: UserRoleType;
+  sessionVersion?: string;
   iat?: number;
   exp?: number;
 }

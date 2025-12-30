@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { UserRole, UserRoleType } from '../constants/userRoles.ts';
+import type { Request, Response, NextFunction } from 'express';
+import type { UserRoleType } from '../constants/userRoles.ts';
 
 export const authorize = (...roles: UserRoleType[]) => {
   return (req: Request, res: Response, next: NextFunction) => {

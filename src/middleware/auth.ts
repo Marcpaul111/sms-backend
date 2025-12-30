@@ -1,7 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
 import { verifyAccessToken } from '../utils/useJwt.ts';
+import { getSessionVersionByUserId } from '../models/auth.ts';
 
-export const verifyTokenMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const verifyTokenMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   try {
     // Try to get token from cookie first (more secure)
     let token = req.cookies.accessToken;
@@ -22,6 +23,17 @@ export const verifyTokenMiddleware = (req: Request, res: Response, next: NextFun
     }
 
     const user = verifyAccessToken(token);
+
+    if (user?.id && user?.sessionVersion) {
+      const currentSv = await getSessionVersionByUserId(user.id);
+      if (!currentSv || currentSv !== user.sessionVersion) {
+        return res.status(401).json({
+          success: false,
+          message: 'Session expired due to login from another device'
+        });
+      }
+    }
+
     req.user = user;
     next();
   } catch (error: any) {

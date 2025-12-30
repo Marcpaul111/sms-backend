@@ -14,7 +14,7 @@ const JWT_EXPIRY = process.env.JWT_EXPIRY || '15m';
 const JWT_REFRESH_EXPIRY = process.env.JWT_REFRESH_EXPIRY || '7d';
 
 // Generate Access Token (short-lived)
-export const generateAccessToken = (user: IAuthUser): string => {
+ const generateAccessToken = (user: IAuthUser): string => {
   return jwt.sign(user, JWT_SECRET, {
     expiresIn: JWT_EXPIRY as string,
     algorithm: 'HS256'
@@ -22,7 +22,7 @@ export const generateAccessToken = (user: IAuthUser): string => {
 };
 
 // Generate Refresh Token (long-lived)
-export const generateRefreshToken = (user: IAuthUser): string => {
+ const generateRefreshToken = (user: IAuthUser): string => {
   return jwt.sign(
     { id: user.id, email: user.email, sv: user.sessionVersion }, 
     JWT_REFRESH_SECRET, 
@@ -34,7 +34,7 @@ export const generateRefreshToken = (user: IAuthUser): string => {
 };
 
 // Verify Access Token
-export const verifyAccessToken = (token: string): IAuthUser => {
+ const verifyAccessToken = (token: string): IAuthUser => {
   try {
     return jwt.verify(token, JWT_SECRET) as IAuthUser;
   } catch (error) {
@@ -43,7 +43,7 @@ export const verifyAccessToken = (token: string): IAuthUser => {
 };
 
 // Verify Refresh Token
-export const verifyRefreshToken = (token: string): { id: string; email: string; sv?: string } => {
+ const verifyRefreshToken = (token: string): { id: string; email: string; sv?: string } => {
   try {
     return jwt.verify(token, JWT_REFRESH_SECRET) as { id: string; email: string; sv?: string };
   } catch (error) {
@@ -52,9 +52,17 @@ export const verifyRefreshToken = (token: string): { id: string; email: string; 
 };
 
 // Generate both tokens at once
-export const generateTokens = (user: IAuthUser) => {
+ const generateTokens = (user: IAuthUser) => {
   return {
     accessToken: generateAccessToken(user),
     refreshToken: generateRefreshToken(user)
   };
+};
+
+export {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyAccessToken,
+  verifyRefreshToken,
+  generateTokens
 };

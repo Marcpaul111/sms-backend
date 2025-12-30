@@ -7,10 +7,10 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/server.ts",
-    "start": "node --loader ts-node/esm src/server.ts",
-    "migrate": "node --loader ts-node/esm src/migrations/20251218_create_users.ts && node --loader ts-node/esm src/migrations/20251227_add_session_version.ts && node --loader ts-node/esm src/migrations/20251227_add_user_signup_trigger.ts"
+    "dev": "nodemon --exec tsx src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "migrate": "tsx src/migrations/20251218_create_users.ts && tsx src/migrations/20251227_add_session_version.ts && tsx src/migrations/20251227_add_user_signup_trigger.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.958.0",
@@ -24,9 +24,9 @@
     "nodemon": "^3.1.11",
     "pg": "^8.16.3",
     "resend": "^6.6.0",
-    "zod": "^4.2.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "zod": "^4.2.1"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
@@ -34,6 +34,7 @@
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.0.3",
-    "@types/pg": "^8.16.0"
+    "@types/pg": "^8.16.0",
+    "tsx": "^4.21.0"
   }
 }

@@ -1,5 +1,5 @@
-import { supabase } from '../config/supabase.ts';
-import { createS3PresignedPutUrl } from '../config/s3.ts';
+import { supabase } from '../config/supabase';
+import { createS3PresignedPutUrl } from '../config/s3';
 
 export const createSignedUploadUrl = async (bucket: string, path: string) => {
   if (supabase) {
@@ -17,7 +17,7 @@ export const recordAssignmentAttachment = async (
   assignmentId: string,
   attachmentPath: string
 ) => {
-  const db = (await import('../config/db.ts')).default;
+  const db = (await import('../config/db')).default;
   await db.query(
     `UPDATE assignments
      SET attachments = COALESCE(attachments, '[]'::jsonb) || to_jsonb($2::text)

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { UserRole } from '../constants/userRoles.ts';
+import { UserRole } from '../constants/userRoles';
 
 // Register validation
 export const registerSchema = z.object({

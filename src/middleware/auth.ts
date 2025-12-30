@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
-import { verifyAccessToken } from '../utils/useJwt.ts';
-import { getSessionVersionByUserId } from '../models/auth.ts';
+import { verifyAccessToken } from '../utils/useJwt';
+import { getSessionVersionByUserId } from '../models/auth';
 
 export const verifyTokenMiddleware = async (req: Request, res: Response, next: NextFunction) => {
   try {

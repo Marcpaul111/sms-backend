@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import pool from '../config/db.ts';
-import { sendVerificationEmail, sendOTPEmail, sendPasswordResetConfirmation } from './email.ts';
+import pool from '../config/db';
+import { sendVerificationEmail, sendOTPEmail, sendPasswordResetConfirmation } from './email';
 import {
   getUserByEmail,
   getUserByVerificationToken,
@@ -15,21 +15,21 @@ import {
   getUserById,
   updateSessionVersion,
   incrementOtpAttempts
-} from '../models/auth.ts';
+} from '../models/auth';
 import {
   getTeacherByUserId,
   createTeacherByUserId,
   activateTeacherByUserId,
   updatePasswordAndVerifyByToken
-} from '../models/auth.ts';
+} from '../models/auth';
 import {
   createTeacherAssignment,
   listAssignmentsByTeacherUserId
-} from '../models/auth.ts';
+} from '../models/auth';
 import {
   createAssignment as createAssignmentModel,
   listAssignmentsForTeacher as listAssignmentsForTeacherModel
-} from '../models/auth.ts';
+} from '../models/auth';
 
 // Generate random token
 const generateToken = (): string => {
@@ -285,7 +285,7 @@ export const createAssignment = async (
       title,
       id: row.id
     });
-    await (await import('../config/db.ts')).default.query(`SELECT pg_notify('user_events', $1)`, [payload]);
+    await (await import('../config/db')).default.query(`SELECT pg_notify('user_events', $1)`, [payload]);
   } catch {}
   return { id: row.id, message: 'Assignment created' };
 };

@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { generateTokens } from '../utils/useJwt.ts';
+import { generateTokens } from '../utils/useJwt';
 
 import {
   registerUser,
@@ -12,7 +12,7 @@ import {
   approveTeacher,
   inviteStudent,
   completeSetup
-} from '../services/authService.ts';
+} from '../services/authService';
 import {
   registerSchema,
   loginSchema,
@@ -21,7 +21,7 @@ import {
   verifyOTPSchema,
   resetPasswordSchema,
   assignTeacherSchema
-} from '../schemas/schemaValidations.ts';
+} from '../schemas/schemaValidations';
 import { ZodError } from 'zod';
 
 // Cookie options
@@ -124,7 +124,7 @@ export const assignTeacherHandler = async (req: Request, res: Response) => {
       return handleValidationError(v.error, res);
     }
     const { teacherUserId, subjectId, classId, sectionId } = v.data;
-    const result = await (await import('../services/authService.ts')).assignTeacherToClass(
+    const result = await (await import('../services/authService')).assignTeacherToClass(
       teacherUserId,
       subjectId,
       classId,
@@ -141,7 +141,7 @@ export const myAssignmentsHandler = async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ success: false, message: 'Not authenticated' });
     }
-    const rows = await (await import('../services/authService.ts')).getAssignmentsForTeacher(req.user.id);
+    const rows = await (await import('../services/authService')).getAssignmentsForTeacher(req.user.id);
     res.status(200).json({ success: true, assignments: rows });
   } catch (error: any) {
     res.status(400).json({ success: false, message: error.message });
@@ -153,13 +153,13 @@ export const createAssignmentHandler = async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ success: false, message: 'Not authenticated' });
     }
-    const { createAssignmentSchema } = await import('../schemas/schemaValidations.ts');
+    const { createAssignmentSchema } = await import('../schemas/schemaValidations');
     const v = createAssignmentSchema.safeParse(req.body);
     if (!v.success) {
       return handleValidationError(v.error, res);
     }
     const { subjectId, classId, sectionId, title, description, dueAt, attachments } = v.data;
-    const { createAssignment } = await import('../services/authService.ts');
+    const { createAssignment } = await import('../services/authService');
     const result = await createAssignment(
       req.user.id,
       subjectId,
@@ -181,7 +181,7 @@ export const createSignedUploadUrlHandler = async (req: Request, res: Response) 
     if (!req.user) {
       return res.status(401).json({ success: false, message: 'Not authenticated' });
     }
-    const { createSignedUploadSchema } = await import('../schemas/schemaValidations.ts');
+    const { createSignedUploadSchema } = await import('../schemas/schemaValidations');
     const v = createSignedUploadSchema.safeParse(req.body);
     if (!v.success) {
       return handleValidationError(v.error, res);
@@ -192,7 +192,7 @@ export const createSignedUploadUrlHandler = async (req: Request, res: Response) 
       ? `assignments/${classId}/${sectionId}/${subjectId}/${assignmentId}/${userId}/`
       : `submissions/${classId}/${sectionId}/${subjectId}/${assignmentId}/${userId}/`;
     const path = `${prefix}${Date.now()}_${filename}`;
-    const { createSignedUploadUrl } = await import('../services/storage.ts');
+    const { createSignedUploadUrl } = await import('../services/storage');
     const urlData = await createSignedUploadUrl(bucket, path);
     res.status(200).json({
       success: true,
@@ -376,11 +376,11 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
       });
     }
 
-    const { verifyRefreshToken, generateAccessToken } = await import('../utils/useJwt.ts');
+    const { verifyRefreshToken, generateAccessToken } = await import('../utils/useJwt');
 
     try {
       const decoded = verifyRefreshToken(refreshToken);
-      const fullUser = await (await import('../models/auth.ts')).getUserById(decoded.id);
+      const fullUser = await (await import('../models/auth')).getUserById(decoded.id);
       if (!fullUser) {
         return res.status(401).json({
           success: false,

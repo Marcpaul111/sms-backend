@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import * as authController from '../controllers/authController.ts';
-import { verifyTokenMiddleware } from '../middleware/auth.ts';  // ← Fix this path
-import { authorize } from '../middleware/rbac.ts';
+import * as authController from '../controllers/authController';
+import { verifyTokenMiddleware } from '../middleware/auth';  // ← Fix this path
+import { authorize } from '../middleware/rbac';
 
 const router = Router();
 

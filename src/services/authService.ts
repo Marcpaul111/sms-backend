@@ -119,6 +119,7 @@ export const loginUser = async (email: string, password: string) => {
 
   return {
     id: user.id,
+    name: user.name,
     email: user.email,
     role: user.role,
     sessionVersion
@@ -322,6 +323,7 @@ export const getAuthUserById = async (id: string) => {
   }
   return {
     id: user.id,
+    name: user.name,
     email: user.email,
     role: user.role
   };

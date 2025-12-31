@@ -18,7 +18,7 @@ const corsOptions = {
   origin: [
     'http://localhost:8080', // Development frontend
     'http://localhost:3000', // Alternative dev port
-    'https://your-frontend-domain.com', // Replace with your actual frontend domain when deployed
+    'https://asiapacific-sms.vercel.app/', // Replace with your actual frontend domain when deployed
   ],
   credentials: true, // Allow cookies and authorization headers
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

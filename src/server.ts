@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from "express";
 import type { Request, Response } from "express";
+import cors from "cors";
 
 import cookieParser from "cookie-parser";
 import { connectDB, disconnectDB } from "./config/db.ts";
@@ -11,6 +12,20 @@ import { config } from 'dotenv';
 
 config();
 const app = express();
+
+// CORS configuration
+const corsOptions = {
+  origin: [
+    'http://localhost:8080', // Development frontend
+    'http://localhost:3000', // Alternative dev port
+    'https://your-frontend-domain.com', // Replace with your actual frontend domain when deployed
+  ],
+  credentials: true, // Allow cookies and authorization headers
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
 
 // Middleware
 app.use(express.json());

@@ -247,9 +247,11 @@ export const login = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       message: 'Login successful',
-      user: authUser,
-      accessToken,
-      refreshToken
+      data: {
+        user: authUser,
+        accessToken,
+        refreshToken
+      }
     });
   } catch (error: any) {
     res.status(401).json({
@@ -358,7 +360,9 @@ export const getCurrentUser = (req: Request, res: Response) => {
 
   res.status(200).json({
     success: true,
-    user: req.user
+    data: {
+      user: req.user
+    }
   });
 };
 
@@ -405,7 +409,9 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
       res.status(200).json({
         success: true,
         message: 'Access token refreshed',
-        accessToken: newAccessToken
+        data: {
+          accessToken: newAccessToken
+        }
       });
     } catch (error: any) {
       return res.status(401).json({

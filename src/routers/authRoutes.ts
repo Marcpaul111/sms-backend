@@ -18,6 +18,7 @@ router.post('/complete-setup', authController.completeSetupHandler);
 // Protected routes
 router.post('/logout', verifyTokenMiddleware, authController.logout);
 router.get('/me', verifyTokenMiddleware, authController.getCurrentUser);
+router.get('/teachers/pending', verifyTokenMiddleware, authorize('admin'), authController.getPendingTeachersHandler);
 router.post('/teachers/:userId/approve', verifyTokenMiddleware, authorize('admin'), authController.approveTeacherHandler);
 router.post('/invite-student', verifyTokenMiddleware, authorize('teacher'), authController.inviteStudentHandler);
 router.post('/assignments', verifyTokenMiddleware, authorize('admin'), authController.assignTeacherHandler);

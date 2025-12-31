@@ -11,7 +11,8 @@ import {
   getAuthUserById,
   approveTeacher,
   inviteStudent,
-  completeSetup
+  completeSetup,
+  getPendingTeachers
 } from '../services/authService';
 import {
   registerSchema,
@@ -114,6 +115,15 @@ export const completeSetupHandler = async (req: Request, res: Response) => {
     res.status(200).json({ success: true, message: result.message });
   } catch (error: any) {
     res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const getPendingTeachersHandler = async (req: Request, res: Response) => {
+  try {
+    const pendingTeachers = await getPendingTeachers();
+    res.status(200).json({ success: true, data: pendingTeachers });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 

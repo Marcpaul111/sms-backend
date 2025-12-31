@@ -328,3 +328,24 @@ export const getAuthUserById = async (id: string) => {
     role: user.role
   };
 };
+
+export const getPendingTeachers = async () => {
+  const client = await pool.connect();
+  try {
+    const r = await client.query(
+      `SELECT
+        u.id as user_id,
+        u.name,
+        u.email,
+        u.created_at as applied_date,
+        t.id as teacher_id
+       FROM users u
+       JOIN teachers t ON u.id = t.user_id
+       WHERE u.role = 'teacher' AND t.is_active = FALSE
+       ORDER BY u.created_at DESC`
+    );
+    return r.rows;
+  } finally {
+    client.release();
+  }
+};

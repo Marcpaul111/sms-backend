@@ -15,11 +15,7 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-  origin: [
-    'http://localhost:8080', // Development frontend
-    'http://localhost:3000', // Alternative dev port
-    'https://asiapacific-sms.vercel.app', // Replace with your actual frontend domain when deployed
-  ],
+  origin: true, // Allow all origins for now
   credentials: true, // Allow cookies and authorization headers
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

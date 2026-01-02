@@ -1,15 +1,7 @@
-import { supabase } from '../config/supabase';
-import { createS3PresignedPutUrl } from '../config/s3';
+import { createGCPSignedUploadUrl } from '../config/gcpStorage';
 
 export const createSignedUploadUrl = async (bucket: string, path: string) => {
-  if (supabase) {
-    const { data, error } = await supabase.storage.from(bucket).createSignedUploadUrl(path);
-    if (error) {
-      throw new Error(error.message);
-    }
-    return data;
-  }
-  const signedUrl = await createS3PresignedPutUrl(bucket, path);
+  const signedUrl = await createGCPSignedUploadUrl(bucket, path);
   return { signedUrl };
 };
 

@@ -3,6 +3,7 @@ import authRoutes from './authRoutes.ts';
 import classesRoutes from './classesRoutes.ts';
 import studentsRoutes from './studentsRoutes.ts';
 import teachersRoutes from './teachersRoutes.ts';
+import storageRoutes from './storageRoutes.ts';
 
 const router = Router();
 
@@ -17,6 +18,9 @@ router.use('/api/students', studentsRoutes);
 
 // Teachers routes
 router.use('/api/teachers', teachersRoutes);
+
+// Storage routes
+router.use('/api/storage', storageRoutes);
 
 // Health check
 router.get('/health', (req, res) => {

@@ -5,9 +5,9 @@ export async function up() {
   try {
     await client.query(`
       ALTER TABLE users
-      ADD COLUMN IF NOT EXISTS session_version VARCHAR(255)
+      ADD COLUMN IF NOT EXISTS registration_attempts INTEGER DEFAULT 0
     `);
-    console.log('✓ Added session_version to users');
+    console.log('✓ Added registration_attempts to users table');
   } finally {
     client.release();
   }
@@ -18,13 +18,12 @@ export async function down() {
   try {
     await client.query(`
       ALTER TABLE users
-      DROP COLUMN IF EXISTS session_version
+      DROP COLUMN IF EXISTS registration_attempts
     `);
-    console.log('✓ Removed session_version from users');
+    console.log('✓ Removed registration_attempts from users table');
   } finally {
     client.release();
   }
 }
 
 await up();
-

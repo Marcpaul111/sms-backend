@@ -8,14 +8,31 @@ const router = Router();
 // Get all classes
 router.get('/', verifyTokenMiddleware, async (req, res) => {
   try {
-    const result = await pool.query(`
+    const classesResult = await pool.query(`
       SELECT c.*, COUNT(s.id) as student_count
       FROM classes c
       LEFT JOIN students s ON c.id = s.class_id
       GROUP BY c.id
       ORDER BY c.name
     `);
-    res.json({ success: true, data: result.rows });
+
+    const classesWithSections = await Promise.all(
+      classesResult.rows.map(async (classRow) => {
+        const sectionsResult = await pool.query(`
+          SELECT id, name
+          FROM sections
+          WHERE class_id = $1
+          ORDER BY name
+        `, [classRow.id]);
+
+        return {
+          ...classRow,
+          sections: sectionsResult.rows
+        };
+      })
+    );
+
+    res.json({ success: true, data: classesWithSections });
   } catch (error) {
     console.error('Error fetching classes:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch classes' });
@@ -95,6 +112,81 @@ router.delete('/:id', verifyTokenMiddleware, authorize('admin'), async (req, res
   } catch (error) {
     console.error('Error deleting class:', error);
     res.status(500).json({ success: false, message: 'Failed to delete class' });
+  }
+});
+
+// Create section (admin only)
+router.post('/:classId/sections', verifyTokenMiddleware, authorize('admin'), async (req, res) => {
+  const { classId } = req.params;
+  const { name } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ success: false, message: 'Section name is required' });
+  }
+
+  try {
+    // Check if class exists
+    const classResult = await pool.query('SELECT id FROM classes WHERE id = $1', [classId]);
+    if (classResult.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Class not found' });
+    }
+
+    const result = await pool.query(
+      'INSERT INTO sections (name, class_id) VALUES ($1, $2) RETURNING *',
+      [name, classId]
+    );
+    res.status(201).json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    console.error('Error creating section:', error);
+    if ((error as any).code === '23505') { // unique violation
+      res.status(400).json({ success: false, message: 'Section name already exists in this class' });
+    } else {
+      res.status(500).json({ success: false, message: 'Failed to create section' });
+    }
+  }
+});
+
+// Update section (admin only)
+router.put('/:classId/sections/:sectionId', verifyTokenMiddleware, authorize('admin'), async (req, res) => {
+  const { classId, sectionId } = req.params;
+  const { name } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ success: false, message: 'Section name is required' });
+  }
+
+  try {
+    const result = await pool.query(
+      'UPDATE sections SET name = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 AND class_id = $3 RETURNING *',
+      [name, sectionId, classId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Section not found' });
+    }
+    res.json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    console.error('Error updating section:', error);
+    if ((error as any).code === '23505') { // unique violation
+      res.status(400).json({ success: false, message: 'Section name already exists in this class' });
+    } else {
+      res.status(500).json({ success: false, message: 'Failed to update section' });
+    }
+  }
+});
+
+// Delete section (admin only)
+router.delete('/:classId/sections/:sectionId', verifyTokenMiddleware, authorize('admin'), async (req, res) => {
+  const { classId, sectionId } = req.params;
+
+  try {
+    const result = await pool.query('DELETE FROM sections WHERE id = $1 AND class_id = $2 RETURNING *', [sectionId, classId]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Section not found' });
+    }
+    res.json({ success: true, message: 'Section deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting section:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete section' });
   }
 });
 

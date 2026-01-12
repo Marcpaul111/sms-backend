@@ -4,10 +4,10 @@ export async function up() {
   const client = await pool.connect();
   try {
     await client.query(`
-      ALTER TABLE users
-      ADD COLUMN IF NOT EXISTS session_version VARCHAR(255)
+      ALTER TABLE assignments
+      ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     `);
-    console.log('✓ Added session_version to users');
+    console.log('✓ updated_at column added to assignments table');
   } finally {
     client.release();
   }
@@ -17,14 +17,13 @@ export async function down() {
   const client = await pool.connect();
   try {
     await client.query(`
-      ALTER TABLE users
-      DROP COLUMN IF EXISTS session_version
+      ALTER TABLE assignments
+      DROP COLUMN IF EXISTS updated_at
     `);
-    console.log('✓ Removed session_version from users');
+    console.log('✓ updated_at column dropped from assignments table');
   } finally {
     client.release();
   }
 }
 
 await up();
-

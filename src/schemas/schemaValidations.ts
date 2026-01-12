@@ -89,13 +89,13 @@ export const createSignedUploadSchema = z.object({
   filename: z.string()
     .min(1, 'filename required')
     .refine((filename) => {
-      const allowedExtensions = ['.pdf', '.doc', '.docx', '.txt', '.md', '.rtf'];
+      const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.md', '.rtf', '.png', '.jpg', '.jpeg', '.gif'];
       const ext = filename.toLowerCase().substring(filename.lastIndexOf('.'));
       return allowedExtensions.includes(ext);
-    }, 'Only PDF, Word documents (.doc, .docx), and text files (.txt, .md, .rtf) are allowed'),
+    }, 'Invalid file type'),
   size: z.number()
     .min(1, 'size must be positive')
-    .max(5 * 1024 * 1024, 'File size must not exceed 5MB')
+    .max(10 * 1024 * 1024, 'File size must not exceed 10MB')
 });
 
 export type CreateSignedUploadInput = z.infer<typeof createSignedUploadSchema>;

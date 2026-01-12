@@ -28,7 +28,7 @@ const sendWithFallback = async (payload: any) => {
 
 export const sendVerificationEmail = async (email: string, token: string) => {
   try {
-    const verificationLink = `${APP_URL}/api/auth/verify-email?token=${token}`;
+    const verificationLink = `${APP_URL}/complete-setup?token=${token}`;
     console.log('Verification link:', verificationLink);
 
     const { result, usedFallback } = await sendWithFallback({

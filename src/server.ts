@@ -2,16 +2,33 @@ import 'dotenv/config';
 import express from "express";
 import type { Request, Response } from "express";
 import cors from "cors";
+import { WebSocketServer, WebSocket } from 'ws';
+import type { PoolClient } from 'pg';
+import multer from 'multer';
 
 import cookieParser from "cookie-parser";
-import { connectDB, disconnectDB } from "./config/db.ts";
-import pool from "./config/db.ts";
+import pool, { connectDB, disconnectDB } from "./config/db.ts";
 import { verifyTokenMiddleware } from "./middleware/auth.ts";
+import { verifyAccessToken } from "./utils/useJwt";
 import routes from "./routers/index.ts";
 import { config } from 'dotenv';
 
 config();
 const app = express();
+
+// Multer configuration for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 1024 * 1024 * 1024, // 1GB limit for module uploads
+  },
+});
+
+// Make upload middleware available to routes
+app.use((req: Request, res: Response, next) => {
+  (req as any).upload = upload;
+  next();
+});
 
 // CORS configuration
 const corsOptions = {
@@ -24,12 +41,79 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '1gb' }));
+app.use(express.urlencoded({ extended: true, limit: '1gb' }));
 app.use(cookieParser());
 
 const adminClients = new Set<Response>();
 let notifClientReady = false;
+let notificationClient: PoolClient | null = null;
+
+// WebSocket server for real-time notifications
+const wss = new WebSocketServer({ noServer: true });
+
+// Store connected clients by user ID
+const wsClients = new Map<string, WebSocket>();
+
+// Authenticate WebSocket connection
+const authenticateWebSocket = (token: string) => {
+  return verifyAccessToken(token);
+};
+
+// Handle WebSocket connections
+wss.on('connection', (ws: WebSocket, request) => {
+  const url = new URL(request.url || '', 'http://localhost');
+  const token = url.searchParams.get('token');
+
+  if (!token) {
+    ws.close(1008, 'Authentication required');
+    return;
+  }
+
+  let user;
+  try {
+    user = authenticateWebSocket(token);
+  } catch (error) {
+    ws.close(1008, 'Invalid token');
+    return;
+  }
+
+  // Store client with user ID
+  (ws as any).user = user;
+  wsClients.set(user.id, ws);
+
+  console.log(`🔗 WebSocket connected: ${user.email} (${user.role})`);
+
+  ws.on('close', () => {
+    wsClients.delete(user.id);
+    console.log(`🔌 WebSocket disconnected: ${user.email}`);
+  });
+
+  ws.on('error', (error) => {
+    console.error('WebSocket error:', error);
+    wsClients.delete(user.id);
+  });
+});
+
+// Broadcast to specific role
+const broadcastToRole = (role: string, event: string, data: any) => {
+  wsClients.forEach((client, userId) => {
+    const user = (client as any).user;
+    if (user?.role === role) {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({ event, data, timestamp: new Date().toISOString() }));
+      }
+    }
+  });
+};
+
+// Broadcast to specific user
+const broadcastToUser = (userId: string, event: string, data: any) => {
+  const client = wsClients.get(userId);
+  if (client && client.readyState === WebSocket.OPEN) {
+    client.send(JSON.stringify({ event, data, timestamp: new Date().toISOString() }));
+  }
+};
 
 // Logging middleware (optional)
 app.use((req: Request, res: Response, next) => {
@@ -91,15 +175,28 @@ const server = app.listen(port, async () => {
   console.log(`   Me: GET http://localhost:${port}/api/auth/me`);
   await connectDB();
   try {
-    const c = await pool.connect();
-    await c.query('LISTEN user_events');
-    c.on('notification', (msg: any) => {
+    notificationClient = await pool.connect();
+    await notificationClient.query('LISTEN user_events');
+    notificationClient.on('notification', (msg: any) => {
+    notificationClient!.on('error', (err: any) => {
+      console.error('LISTEN client error:', err);
+    });
+    notificationClient!.on('end', () => {
+      console.log('LISTEN client connection ended');
+      notificationClient = null;
+    });
       const payload = (() => { try { return JSON.parse(msg.payload || '{}'); } catch { return {}; } })();
       if (payload?.type === 'user_signup' && payload?.role === 'teacher') {
+        // Broadcast to WebSocket clients
+        broadcastToRole('admin', 'user_signup', payload);
+        // Legacy SSE support
         const data = JSON.stringify(payload);
         for (const client of adminClients) {
           client.write(`event: user_signup\ndata: ${data}\n\n`);
         }
+      } else if (payload?.type === 'submission_created') {
+        // Broadcast to teachers (we'd need to get assignment teacher, but for simplicity broadcast to all teachers)
+        broadcastToRole('teacher', 'submission_received', payload);
       }
     });
     notifClientReady = true;
@@ -108,10 +205,21 @@ const server = app.listen(port, async () => {
   }
 });
 
+// Handle WebSocket upgrade
+server.on('upgrade', (request, socket, head) => {
+  wss.handleUpgrade(request, socket, head, (ws) => {
+    wss.emit('connection', ws, request);
+  });
+});
+
 // Handle unhandled promise rejections
 process.on("unhandledRejection", (err) => {
   console.error("❌ Unhandled rejection error:", err);
   server.close(async () => {
+    if (notificationClient) {
+      notificationClient.release();
+      notificationClient = null;
+    }
     await disconnectDB();
     process.exit(1);
   });
@@ -120,14 +228,24 @@ process.on("unhandledRejection", (err) => {
 // Handle uncaught exceptions
 process.on("uncaughtException", async (err) => {
   console.error("❌ Uncaught exception error:", err);
-  await disconnectDB();
-  process.exit(1);
+  server.close(async () => {
+    if (notificationClient) {
+      notificationClient.release();
+      notificationClient = null;
+    }
+    await disconnectDB();
+    process.exit(1);
+  });
 });
 
 // Graceful shutdown on SIGTERM
 process.on("SIGTERM", async () => {
   console.log("🔴 SIGTERM signal received. Shutting down server...");
   server.close(async () => {
+    if (notificationClient) {
+      notificationClient.release();
+      notificationClient = null;
+    }
     await disconnectDB();
     console.log("✓ Server closed gracefully.");
     process.exit(0);
@@ -138,6 +256,10 @@ process.on("SIGTERM", async () => {
 process.on("SIGINT", async () => {
   console.log("\n🔴 SIGINT signal received. Shutting down server...");
   server.close(async () => {
+    if (notificationClient) {
+      notificationClient.release();
+      notificationClient = null;
+    }
     await disconnectDB();
     console.log("✓ Server closed gracefully.");
     process.exit(0);

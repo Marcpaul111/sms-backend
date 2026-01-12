@@ -4,10 +4,10 @@ export async function up() {
   const client = await pool.connect();
   try {
     await client.query(`
-      ALTER TABLE users
-      ADD COLUMN IF NOT EXISTS session_version VARCHAR(255)
+      ALTER TABLE modules
+      ADD COLUMN IF NOT EXISTS section_id UUID REFERENCES sections(id) ON DELETE SET NULL
     `);
-    console.log('✓ Added session_version to users');
+    console.log('✓ section_id column added to modules table');
   } finally {
     client.release();
   }
@@ -17,14 +17,13 @@ export async function down() {
   const client = await pool.connect();
   try {
     await client.query(`
-      ALTER TABLE users
-      DROP COLUMN IF EXISTS session_version
+      ALTER TABLE modules
+      DROP COLUMN IF EXISTS section_id
     `);
-    console.log('✓ Removed session_version from users');
+    console.log('✓ section_id column dropped from modules table');
   } finally {
     client.release();
   }
 }
 
 await up();
-

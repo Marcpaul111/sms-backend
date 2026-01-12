@@ -4,10 +4,10 @@ export async function up() {
   const client = await pool.connect();
   try {
     await client.query(`
-      ALTER TABLE users
-      ADD COLUMN IF NOT EXISTS session_version VARCHAR(255)
+      ALTER TABLE students
+      ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true
     `);
-    console.log('✓ Added session_version to users');
+    console.log('✓ is_active column added to students table');
   } finally {
     client.release();
   }
@@ -17,14 +17,14 @@ export async function down() {
   const client = await pool.connect();
   try {
     await client.query(`
-      ALTER TABLE users
-      DROP COLUMN IF EXISTS session_version
+      ALTER TABLE students
+      DROP COLUMN IF EXISTS is_active
     `);
-    console.log('✓ Removed session_version from users');
+    console.log('✓ is_active column removed from students table');
   } finally {
     client.release();
   }
 }
 
+// Run migration
 await up();
-

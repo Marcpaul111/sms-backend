@@ -96,7 +96,6 @@ export async function up() {
     console.log('✓ All tables created successfully');
   } finally {
     client.release();
-    await pool.end();
   }
 }
 
@@ -113,7 +112,6 @@ export async function down() {
     console.log('✓ All tables dropped successfully');
   } finally {
     client.release();
-    await pool.end();
   }
 }
 

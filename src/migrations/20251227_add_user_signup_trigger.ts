@@ -34,7 +34,6 @@ export async function up() {
     console.log('✓ Trigger for user signup notifications created');
   } finally {
     client.release();
-    await pool.end();
   }
 }
 
@@ -46,7 +45,6 @@ export async function down() {
     console.log('✓ Trigger and function removed');
   } finally {
     client.release();
-    await pool.end();
   }
 }
 

@@ -19,7 +19,6 @@ export async function up() {
     console.log('✓ Auth fields added to users table');
   } finally {
     client.release();
-    await pool.end();
   }
 }
 
@@ -41,7 +40,6 @@ export async function down() {
     console.log('✓ Auth fields removed from users table');
   } finally {
     client.release();
-    await pool.end();
   }
 }
 

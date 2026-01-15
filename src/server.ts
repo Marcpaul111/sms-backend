@@ -31,12 +31,28 @@ app.use((req: Request, res: Response, next) => {
 });
 
 // CORS configuration
+const allowedOrigins = [
+  "https://sms-asiapacific.online",
+  "https://www.sms-asiapacific.online",
+  "http://localhost:5173",
+  "http://localhost:8080"
+];
+
 const corsOptions = {
-  origin: true, // Allow all origins for now
-  credentials: true, // Allow cookies and authorization headers
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // allow non-browser requests with no origin (Postman/CRON)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("Not allowed by CORS: " + origin));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
+
 
 app.use(cors(corsOptions));
 

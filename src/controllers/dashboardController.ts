@@ -520,7 +520,7 @@ export const getStudentModules = async (req: Request, res: Response) => {
     }
 
     const studentResult = await pool.query(
-      'SELECT id, class_id, section_id FROM students WHERE user_id = $1',
+      'SELECT * FROM students WHERE user_id = $1',
       [user.id]
     );
 
@@ -532,6 +532,22 @@ export const getStudentModules = async (req: Request, res: Response) => {
     }
 
     const student = studentResult.rows[0];
+    console.log('getStudentModules - student full record:', student);
+
+    const subjectsResult = await pool.query(
+      'SELECT subject_id FROM student_subjects WHERE student_id = $1',
+      [student.id]
+    );
+    const subjectIds = subjectsResult.rows.map(row => row.subject_id);
+    console.log('getStudentModules - student subjects:', subjectIds);
+
+    if (subjectIds.length === 0) {
+      console.log('getStudentModules - no subjects found for student');
+      return res.json({
+        success: true,
+        data: []
+      });
+    }
 
     const modulesResult = await pool.query(`
       SELECT
@@ -554,9 +570,13 @@ export const getStudentModules = async (req: Request, res: Response) => {
       LEFT JOIN sections sec ON m.section_id = sec.id
       JOIN teachers t ON m.teacher_id = t.id
       JOIN users u ON t.user_id = u.id
-      WHERE m.class_id = $1 AND (m.section_id = $2 OR m.section_id IS NULL)
+      WHERE m.class_id = $1 
+        AND (m.section_id = $2 OR m.section_id IS NULL)
+        AND m.subject_id = ANY($3::uuid[])
       ORDER BY m.created_at DESC
-    `, [student.class_id, student.section_id]);
+    `, [student.class_id, student.section_id, subjectIds]);
+
+    console.log('getStudentModules - modules found:', modulesResult.rows.length);
 
     res.json({
       success: true,

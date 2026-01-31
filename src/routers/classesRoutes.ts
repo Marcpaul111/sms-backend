@@ -47,19 +47,32 @@ router.post('/', verifyTokenMiddleware, authorize('admin'), async (req, res) => 
     return res.status(400).json({ success: false, message: 'Class name is required' });
   }
 
+  const client = await pool.connect();
   try {
-    const result = await pool.query(
+    await client.query('BEGIN');
+    
+    const classResult = await client.query(
       'INSERT INTO classes (name, description) VALUES ($1, $2) RETURNING *',
       [name, description]
     );
-    res.status(201).json({ success: true, data: result.rows[0] });
+    
+    await client.query(
+      'INSERT INTO sections (name, class_id) VALUES ($1, $2)',
+      ['Section 1', classResult.rows[0].id]
+    );
+    
+    await client.query('COMMIT');
+    res.status(201).json({ success: true, data: classResult.rows[0] });
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Error creating class:', error);
-    if ((error as any).code === '23505') { // unique violation
+    if ((error as any).code === '23505') {
       res.status(400).json({ success: false, message: 'Class name already exists' });
     } else {
       res.status(500).json({ success: false, message: 'Failed to create class' });
     }
+  } finally {
+    client.release();
   }
 });
 

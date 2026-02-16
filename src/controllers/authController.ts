@@ -553,7 +553,7 @@ export const logout = (req: Request, res: Response) => {
 };
 
 // Get Current User
-export const getCurrentUser = (req: Request, res: Response) => {
+export const getCurrentUser = async (req: Request, res: Response) => {
   if (!req.user) {
     return res.status(401).json({
       success: false,
@@ -561,12 +561,35 @@ export const getCurrentUser = (req: Request, res: Response) => {
     });
   }
 
-  res.status(200).json({
-    success: true,
-    data: {
-      user: req.user
+  try {
+    // Fetch fresh user data from database
+    const updatedUser = await (await import('../models/auth')).getUserById(req.user.id);
+
+    // Generate signed URL for profile picture if exists
+    let profile_picture_url = updatedUser?.profile_picture;
+    if (profile_picture_url) {
+      const { storage } = await import('../config/gcpStorage');
+      if (storage) {
+        const bucketObj = storage.bucket('images-sms');
+        const file = bucketObj.file(profile_picture_url);
+        const [signedUrl] = await file.getSignedUrl({
+          version: 'v4' as const,
+          action: 'read' as const,
+          expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
+        profile_picture_url = signedUrl;
+      }
     }
-  });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        user: { ...updatedUser, profile_picture: profile_picture_url }
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
 
 // Add this function alongside your other exports

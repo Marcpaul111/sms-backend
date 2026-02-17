@@ -32,6 +32,7 @@ router.get('/teachers', verifyTokenMiddleware, authorize('admin'), authControlle
 router.post('/teachers/:userId/approve', verifyTokenMiddleware, authorize('admin'), authController.approveTeacherHandler);
 router.post('/teachers/:userId/reject', verifyTokenMiddleware, authorize('admin'), authController.rejectTeacherHandler);
 router.post('/teachers/:userId/toggle-status', verifyTokenMiddleware, authorize('admin'), authController.toggleTeacherStatusHandler);
+router.delete('/teachers/:userId', verifyTokenMiddleware, authorize('admin'), authController.deleteTeacherHandler);
 router.post('/invite-student', verifyTokenMiddleware, authorize('teacher'), authController.inviteStudentHandler);
 router.post('/invite-teacher', verifyTokenMiddleware, authorize('admin'), authController.inviteTeacherHandler);
 router.get('/teacher-assignments', verifyTokenMiddleware, authorize('admin'), authController.getAllAssignmentsHandler);

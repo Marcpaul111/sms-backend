@@ -178,6 +178,33 @@ export const toggleTeacherStatusHandler = async (req: Request, res: Response) =>
   }
 };
 
+export const deleteTeacherHandler = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params as { userId: string };
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const teacherResult = await client.query('SELECT id FROM teachers WHERE user_id = $1', [userId]);
+      if (teacherResult.rows.length === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ success: false, message: 'Teacher not found' });
+      }
+      await client.query('DELETE FROM teacher_assignments WHERE teacher_id = $1', [teacherResult.rows[0].id]);
+      await client.query('DELETE FROM teachers WHERE user_id = $1', [userId]);
+      await client.query('DELETE FROM users WHERE id = $1', [userId]);
+      await client.query('COMMIT');
+      res.status(200).json({ success: true, message: 'Teacher deleted successfully' });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export const assignTeacherHandler = async (req: Request, res: Response) => {
   try {
     const v = assignTeacherSchema.safeParse(req.body);
